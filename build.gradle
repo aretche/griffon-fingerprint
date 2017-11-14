@@ -69,7 +69,10 @@ jfx {
 dependencies {
     compile "org.codehaus.griffon:griffon-guice:${griffon.version}"
 
-    runtime "org.slf4j:slf4j-simple:${slf4jVersion}"
+    compile "org.slf4j:slf4j-simple:${slf4jVersion}"
+
+    // Agrego jar de lectores Crossmatch U.are.U
+    compile files('lib/dpuareu.jar')
 
     testCompile "org.codehaus.griffon:griffon-javafx-test:${griffon.version}"
     testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"

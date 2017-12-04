@@ -71,7 +71,6 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
      * Captura una huella y muestra su calidad
      */
     @ControllerAction
-    @Threading(Threading.Policy.INSIDE_UITHREAD_ASYNC)
     void capturar() {
 
         model.estado = ""
@@ -83,7 +82,6 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
      * Enrola una huella y la asocia al modelo para posteriores verificaicones
      */
     @ControllerAction
-    @Threading(Threading.Policy.INSIDE_UITHREAD_ASYNC)
     void enrolar() {
 
         model.enrollmentFMD = null
@@ -114,7 +112,6 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
      * Valida la huella ingresada contra la enrolada
      */
     @ControllerAction
-    @Threading(Threading.Policy.INSIDE_UITHREAD_ASYNC)
     void validar() {
 
         model.estado = ""

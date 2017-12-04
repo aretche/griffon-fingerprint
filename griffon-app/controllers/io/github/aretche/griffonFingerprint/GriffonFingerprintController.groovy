@@ -14,7 +14,8 @@ import com.digitalpersona.uareu.*
 @Slf4j
 @ArtifactProviderFor(GriffonController)
 class GriffonFingerprintController implements Engine.EnrollmentCallback {
-    @MVCMember @Nonnull
+    @MVCMember
+    @Nonnull
     GriffonFingerprintModel model
 
     /**
@@ -29,15 +30,14 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
         ReaderCollection readers = UareUGlobal.GetReaderCollection()
 
         //acquire available readers
-        try{
+        try {
             log.info "Detectando lectores de huellas digitales..."
             readers.GetReaders()
-        }
-        catch(UareUException e) {
+        } catch (UareUException e) {
             log.error "Excepción al invocar a ReaderCollection.GetReaders()", e
         }
 
-        if (readers){
+        if (readers) {
             String lectores = "Lectores detectados: \n"
             Integer num = 1
             log.info "Enumerando los lectores detectados..."
@@ -46,14 +46,14 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
                 lectores += "#${num} \n"
                 lectores += "Fabricante/Modelo: ${rd.id.vendor_name} / ${rd.id.product_name} \n"
                 lectores += "USB VID-PID: ${rd.id.vendor_id} / ${rd.id.product_id} \n"
-                try{
+                try {
                     reader.Open(Reader.Priority.COOPERATIVE)
                     Reader.Capabilities rc = reader.GetCapabilities()
                     reader.Close()
-                    lectores += "Puede capturar? ${rc.can_capture?'Sí':'No'}.\n"
-                    lectores += "Puede hacer streaming? ${rc.can_stream?'Sí':'No'}.\n"
+                    lectores += "Puede capturar? ${rc.can_capture ? 'Sí' : 'No'}.\n"
+                    lectores += "Puede hacer streaming? ${rc.can_stream ? 'Sí' : 'No'}.\n"
 
-                } catch(UareUException e) {
+                } catch (UareUException e) {
                     log.error "Excepción al invocar a GetCapabilities()", e
                 }
                 num++
@@ -89,20 +89,20 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
         model.enrollmentFMD = null
         model.estado = ""
 
-        if (!model.reader){
+        if (!model.reader) {
             log.warn "No hay un lector seleccionado!"
             model.estado = "No hay un lector seleccionado!"
         } else {
             model.estado = "Enrolando el dedo indice derecho...\n"
-            try{
+            try {
                 Engine engine = UareUGlobal.GetEngine()
                 model.enrollmentFMD = engine.CreateEnrollmentFmd(Fmd.Format.ANSI_378_2004, this)
-                if(!model.enrollmentFMD){
+                if (!model.enrollmentFMD) {
                     model.estado = "No se pudo enrolar la huella!"
                 } else {
                     model.estado = "Huella enrolada con éxito!"
                 }
-            } catch(UareUException e) {
+            } catch (UareUException e) {
                 log.error "Excepción al enrolar huella:", e
             }
 
@@ -115,26 +115,26 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
      */
     @ControllerAction
     @Threading(Threading.Policy.INSIDE_UITHREAD_ASYNC)
-    void validar(){
+    void validar() {
 
         model.estado = ""
-        if(!model.enrollmentFMD){
+        if (!model.enrollmentFMD) {
             model.estado = "Primero debe enrolar una huella!"
         } else {
             // Capturo la huella para comparar
             this.capturarHuella()
 
-            if(model.captureResult != null){
+            if (model.captureResult != null) {
                 Engine engine = UareUGlobal.GetEngine()
 
                 // Creo un arreglo para almacenar las dos FMDs a comparar
                 Fmd[] m_fmds = new Fmd[2]
                 m_fmds[0] = model.enrollmentFMD
 
-                try{
+                try {
                     // Creo el FMD de la huella recién capturada
                     Fmd fmd = engine.CreateFmd(model.captureResult.image, Fmd.Format.ANSI_378_2004)
-                    if(fmd){
+                    if (fmd) {
                         m_fmds[1] = fmd
 
                         // Probabilidad de falso positivo de 1 en 100000
@@ -142,18 +142,17 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
 
                         int falsematch_rate = engine.Compare(m_fmds[0], 0, m_fmds[1], 0)
 
-                        if(falsematch_rate < target_falsematch_rate){
+                        if (falsematch_rate < target_falsematch_rate) {
                             model.estado += "Las huellas coinciden.\n"
                             model.estado += String.format("Indice de disimilaridad: 0x%x.\n", falsematch_rate)
-                            model.estado += String.format("Probabilidad de falso positivo: %e.\n\n\n", (double)(falsematch_rate / Engine.PROBABILITY_ONE))
-                        }
-                        else{
+                            model.estado += String.format("Probabilidad de falso positivo: %e.\n\n\n", (double) (falsematch_rate / Engine.PROBABILITY_ONE))
+                        } else {
                             model.estado += "Las huellas no coinciden!!!\n\n\n"
                         }
                     } else {
                         model.estado += "Error al generar el FMD de la huella!!!\n\n\n"
                     }
-                } catch(UareUException e){
+                } catch (UareUException e) {
                     log.error "Excepción al generar el FMD de la huella:", e
                 }
             }
@@ -166,13 +165,13 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
      * @param format
      * @return
      */
-    Engine.PreEnrollmentFmd GetFmd(Fmd.Format format){
+    Engine.PreEnrollmentFmd GetFmd(Fmd.Format format) {
         Engine.PreEnrollmentFmd prefmd = null
         this.capturarHuella()
-        if(model.captureResult != null){
-            if(Reader.CaptureQuality.CANCELED == model.captureResult.quality){
+        if (model.captureResult != null) {
+            if (Reader.CaptureQuality.CANCELED == model.captureResult.quality) {
                 //capture canceled, return null
-            } else if(null != model.captureResult.image && Reader.CaptureQuality.GOOD == model.captureResult.quality){
+            } else if (null != model.captureResult.image && Reader.CaptureQuality.GOOD == model.captureResult.quality) {
                 //acquire engine
                 Engine engine = UareUGlobal.GetEngine()
 
@@ -191,31 +190,31 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
     /**
      * Captura una huella y actualiza la almacenada en el modelo
      */
-    void capturarHuella(){
+    void capturarHuella() {
 
         model.captureResult = null
 
-        if (!model.reader){
+        if (!model.reader) {
             log.warn "No hay un lector seleccionado!"
             model.estado += "No hay un lector seleccionado!"
         } else {
             model.estado += "Apoye el dedo en el lector...\n"
-            try{
+            try {
                 //wait for reader to become ready
                 boolean bReady = false
                 model.reader.Open(Reader.Priority.COOPERATIVE)
-                while(!bReady){
+                while (!bReady) {
                     Reader.Status rs = model.reader.GetStatus()
-                    if(Reader.ReaderStatus.BUSY == rs.status){
+                    if (Reader.ReaderStatus.BUSY == rs.status) {
                         //if busy, wait a bit
-                        try{
+                        try {
                             Thread.sleep(100)
-                        } catch(InterruptedException e) {
+                        } catch (InterruptedException e) {
                             log.error "Lectura interrumpida!!!", e
                             model.estado += "Lectura interrumpida!!!"
                             break
                         }
-                    } else if(Reader.ReaderStatus.READY == rs.status || Reader.ReaderStatus.NEED_CALIBRATION == rs.status){
+                    } else if (Reader.ReaderStatus.READY == rs.status || Reader.ReaderStatus.NEED_CALIBRATION == rs.status) {
                         //ready for capture
                         bReady = true
                         break
@@ -227,13 +226,13 @@ class GriffonFingerprintController implements Engine.EnrollmentCallback {
                     }
                 }
 
-                if(bReady){
+                if (bReady) {
                     //capture
                     model.captureResult = model.reader.Capture(Fid.Format.ANSI_381_2004, Reader.ImageProcessing.IMG_PROC_DEFAULT, model.reader.GetCapabilities().resolutions[0], -1)
                     model.estado += "Calidad de la huella obtenida: ${model.captureResult.quality}...\n"
                 }
                 model.reader.Close()
-            } catch(UareUException e) {
+            } catch (UareUException e) {
                 log.error "Excepción al capturar huella:", e
             }
         }

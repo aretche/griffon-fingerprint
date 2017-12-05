@@ -74,6 +74,11 @@ dependencies {
     // Agrego jar de lectores Crossmatch U.are.U
     compile files('lib/dpuareu.jar')
 
+    // Agrego plugins de acceso a bases de datos
+    compile 'org.codehaus.griffon.plugins:griffon-datasource-core:2.1.0'
+    compile 'org.codehaus.griffon.plugins:griffon-gsql-core:2.1.0'
+    compile 'com.h2database:h2:1.4.196'
+
     testCompile "org.codehaus.griffon:griffon-javafx-test:${griffon.version}"
     testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
